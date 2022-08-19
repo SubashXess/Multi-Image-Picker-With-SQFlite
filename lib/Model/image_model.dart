@@ -1,18 +1,17 @@
 class ImageModel {
   int? id;
-  String? image;
+  String? imageTitle;
 
-  ImageModel({this.id, this.image});
+  ImageModel({this.id, this.imageTitle});
 
-  factory ImageModel.fromJson(Map<String, dynamic> resource) {
-    return ImageModel(
-      id: resource['id'],
-      image: resource['image'],
-    );
+  ImageModel.fromMap(Map<dynamic, dynamic> resource)
+      : id = resource['id'],
+        imageTitle = resource['imageTitle'];
+
+  Map<String, Object?> toMap() {
+    return {
+      'id': id,
+      'imageTitle': imageTitle,
+    };
   }
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'image': image,
-      };
 }

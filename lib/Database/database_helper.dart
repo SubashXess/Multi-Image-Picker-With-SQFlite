@@ -23,25 +23,31 @@ class DBHelper {
 
   _onCreate(Database database, int version) async {
     await database.execute(
-        'CREATE TABLE imagesaver (id INTEGER PRIMARY KEY AUTOINCREMENT, image BLOB)');
+        'CREATE TABLE imagesaver (id INTEGER PRIMARY KEY, imageTitle TEXT)');
   }
 
   Future<ImageModel> saveImage(ImageModel image) async {
     Database? dbImage = await database;
-    await dbImage!.insert('imagesaver', image.toJson());
+    image.id = await dbImage!.insert('imagesaver', image.toMap());
     return image;
   }
 
-  Future<List<ImageModel>> getImageList() async {
+  Future<List<ImageModel>> getImages() async {
     Database? dbImage = await database;
     final List<Map<String, dynamic>> queryResult =
         await dbImage!.query('imagesaver');
-    return queryResult.map((e) => ImageModel.fromJson(e)).toList();
+    return queryResult.map((e) => ImageModel.fromMap(e)).toList();
+    // .map((e) => ImageModel.fromJson(e)).toList();
   }
 
   Future<int> updateImage(ImageModel image) async {
     Database? dbImage = await database;
-    return await dbImage!.update('imagesaver', image.toJson(),
+    return await dbImage!.update('imagesaver', image.toMap(),
         where: 'id = ?', whereArgs: [image.id]);
+  }
+
+  Future closeDatabase() async {
+    Database? dbImage = await database;
+    dbImage!.close();
   }
 }
