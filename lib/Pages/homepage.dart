@@ -8,6 +8,7 @@ import 'package:multi_image_picker_v1/Database/database_helper.dart';
 import 'package:multi_image_picker_v1/Model/image_model.dart';
 import 'package:multi_image_picker_v1/Pages/secondpage.dart';
 import 'package:multi_image_picker_v1/Provider/imageprovider.dart';
+import 'package:multi_image_picker_v1/Utils/utility.dart';
 import 'package:path/path.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -26,22 +27,23 @@ class _HomePageState extends State<HomePage> {
   DBHelper? dbHelper = DBHelper();
 
   // second image add
-  // Future<File>? imageFile;
-  // Image? image;
-  // List<ImageModel>? imageList;
+  Future<File>? imageFile;
+  Image? image;
+  List<ImageModel>? imageList;
   // // ImageModel? imageModel;
 
   @override
   void initState() {
     super.initState();
-    // imageList = [];
-
-    dbHelper!.getImages();
+    imageList = [];
+    dbHelper = DBHelper();
+    loadImageFromDB();
+    // dbHelper!.getImages();
   }
 
   // Image add
-  File? image;
-  String? loadImage;
+  // File? image;
+  // String? loadImage;
   // File? finalImage;
 
   // Future<File>? imageFile;
@@ -161,9 +163,8 @@ class _HomePageState extends State<HomePage> {
                 clipBehavior: Clip.none,
                 children: [
                   SizedBox(
-                    // height: size.height * 0.18,
+                    height: size.height * 0.18,
                     width: size.height * 0.36,
-
                     child: Card(
                       margin: EdgeInsets.zero,
                       clipBehavior: Clip.antiAliasWithSaveLayer,
@@ -180,22 +181,30 @@ class _HomePageState extends State<HomePage> {
                           //     : Utility.imageFromBase64String(
                           //         imageList![0].imageTitle.toString()),
 
-                          image == null
-                              ? Image.asset(
-                                  "assets/default-image.png",
-                                  fit: BoxFit.cover,
-                                )
-                              : Image.file(File(loadImage!)),
+                          // image == null
+                          //     ? Image.asset(
+                          //         "assets/default-image.png",
+                          //         fit: BoxFit.cover,
+                          //       )
+                          //     :
+                          ListView(
+                        shrinkWrap: true,
+                        itemExtent: 140,
+                        scrollDirection: Axis.horizontal,
+                        children: imageList!.map((img) {
+                          return Utility.imageFromBase64String(img.imageTitle!);
+                        }).toList(),
+                      ),
                     ),
                   ),
                   Positioned(
                     top: -10.0,
                     right: -10.0,
                     child: InkWell(
-                      onTap: () => pickImage(ImageSource.camera, context),
-                      // onTap: () {
-                      //   pickImageFromCamera();
-                      // },
+                      // onTap: () => pickImage(ImageSource.camera, context),
+                      onTap: () {
+                        pickImageFromCamera();
+                      },
 
                       child: Container(
                         padding: const EdgeInsets.all(6.0),
@@ -214,18 +223,18 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               const SizedBox(height: 25.0),
-              Card(
-                color: Colors.blue,
-                child: Card(
-                  child: FutureBuilder(
-                    future: photoProvider.getData(),
-                    builder:
-                        (context, AsyncSnapshot<List<ImageModel>> snapshot) {
-                      return Image.file(File(snapshot.data![0].imageTitle!));
-                    },
-                  ),
-                ),
-              ),
+              // Card(
+              //   color: Colors.blue,
+              //   child: Card(
+              //     child: FutureBuilder(
+              //       future: photoProvider.getData(),
+              //       builder:
+              //           (context, AsyncSnapshot<List<ImageModel>> snapshot) {
+              //         return Image.file(File(snapshot.data![0].imageTitle!));
+              //       },
+              //     ),
+              //   ),
+              // ),
               MaterialButton(
                 onPressed: () {
                   Navigator.push(
@@ -244,22 +253,24 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // loadImageFromDB() {
-  //   dbHelper!.getImages().then((img) {
-  //     imageList!.clear();
-  //     imageList!.addAll(img);
-  //   });
-  // }
+  loadImageFromDB() {
+    dbHelper!.getImages().then((img) {
+      setState(() {
+        imageList!.clear();
+        imageList!.addAll(img);
+      });
+    });
+  }
 
-  // pickImageFromCamera() {
-  //   ImagePicker().pickImage(source: ImageSource.camera).then((img) async {
-  //     String imgString = Utility.base64String(await img!.readAsBytes());
-  //     print(imgString);
-  //     ImageModel finalImage = ImageModel(id: 0, imageTitle: imgString);
-  //     dbHelper!.saveImage(finalImage);
-  //     loadImageFromDB();
-  //   });
-  // }
+  pickImageFromCamera() {
+    ImagePicker().pickImage(source: ImageSource.camera).then((img) async {
+      String imgString = Utility.base64String(await img!.readAsBytes());
+      print(imgString);
+      ImageModel finalImage = ImageModel(id: 0, imageTitle: imgString);
+      dbHelper!.saveImage(finalImage);
+      loadImageFromDB();
+    });
+  }
 
   // Future pickImage(ImageSource source) async {
   //   try {
@@ -277,50 +288,50 @@ class _HomePageState extends State<HomePage> {
   //   }
   // }
 
-  Future pickImage(ImageSource source, BuildContext context) async {
-    try {
-      final image = await ImagePicker().pickImage(source: source);
+  // Future pickImage(ImageSource source, BuildContext context) async {
+  //   try {
+  //     final image = await ImagePicker().pickImage(source: source);
 
-      if (image == null) return;
+  //     if (image == null) return;
 
-      // temporary image
-      // final imageTemporary = File(image.path);
+  //     // temporary image
+  //     // final imageTemporary = File(image.path);
 
-      // permanent image
-      final imagePermanent = await saveImagePermanently(image.path);
-      print('Image Path : ${image.path}');
+  //     // permanent image
+  //     final imagePermanent = await saveImagePermanently(image.path);
+  //     print('Image Path : ${image.path}');
 
-      setState(() {
-        // this.image = imageTemporary;
-        this.image = imagePermanent;
-        // loadImage = imagePermanent.toString(); // temp comment
-        // set next
-        ImageModel imageModel = ImageModel(imageTitle: this.image!.path);
-        dbHelper!.saveImage(imageModel);
-        loadImage = imageModel.imageTitle;
-        print('Database Image : ${imageModel.imageTitle}');
-        print('Get Image : ${dbHelper!.getImages()}');
+  //     setState(() {
+  //       // this.image = imageTemporary;
+  //       this.image = imagePermanent;
+  //       // loadImage = imagePermanent.toString(); // temp comment
+  //       // set next
+  //       ImageModel imageModel = ImageModel(imageTitle: this.image!.path);
+  //       dbHelper!.saveImage(imageModel);
+  //       loadImage = imageModel.imageTitle;
+  //       print('Database Image : ${imageModel.imageTitle}');
+  //       print('Get Image : ${dbHelper!.getImages()}');
 
-        // print('Image Model : ${imageModel.image}');
+  //       // print('Image Model : ${imageModel.image}');
 
-        print("Load Image : $loadImage");
-      });
-    } on PlatformException catch (e) {
-      print('Failed to pick image : $e');
-    }
-  }
+  //       print("Load Image : $loadImage");
+  //     });
+  //   } on PlatformException catch (e) {
+  //     print('Failed to pick image : $e');
+  //   }
+  // }
 
-  Future<File> saveImagePermanently(String imagePath) async {
-    final directory = await getApplicationDocumentsDirectory();
-    final name = basename(imagePath);
-    final image = File('${directory.path}/$name');
-    return File(imagePath).copy(image.path);
+  // Future<File> saveImagePermanently(String imagePath) async {
+  //   final directory = await getApplicationDocumentsDirectory();
+  //   final name = basename(imagePath);
+  //   final image = File('${directory.path}/$name');
+  //   return File(imagePath).copy(image.path);
 
-    // test
+  //   // test
 
-    // SharedPreferences preferences = await SharedPreferences.getInstance();
+  //   // SharedPreferences preferences = await SharedPreferences.getInstance();
 
-    // SharedPreferences preferences = await SharedPreferences.getInstance();
-    // preferences.setString('${directory.path}/$name', image.toString());
-  }
+  //   // SharedPreferences preferences = await SharedPreferences.getInstance();
+  //   // preferences.setString('${directory.path}/$name', image.toString());
+  // }
 }
